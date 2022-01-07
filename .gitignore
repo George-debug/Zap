@@ -1,3 +1,4 @@
-/build
+build/
 ./src/y.tab.c
-./s.yy.c
+./src/lex.yy.c
+./src/y.tab.h
