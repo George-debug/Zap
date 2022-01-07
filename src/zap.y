@@ -1,11 +1,33 @@
 %{
 #include <stdio.h>
+#include <string.h>
+#include "umbrella.h"
+
 extern FILE* yyin;
 extern char* yytext;
 extern int yylineno;
 
+struct Vector *variable_table_list, *global_scope;
+
 %}
-%token IDENTIFIER TYPE RETURN ASSIGN CONSTANT IF ELSE WHILE DO UNTIL VOID DIGIT_SEQUENCE LESS LESS_EQUAL GREATER GREATER_EQUAL EQUAL NOT_EQUAL AND OR NOT PLUS MINUS MOD
+%union{
+    float float_val;
+    int int_val;
+    char *string_val;
+    struct Zap_Type_Value *zap_val;
+    struct Zap_Expression *zap_expression_val;
+    struct Vector *vector_val;
+    struct Zap_Init_Declaration *init_declarator_val;
+}
+
+%token RETURN ASSIGN CONSTANT IF ELSE WHILE DO UNTIL VOID LESS LESS_EQUAL GREATER GREATER_EQUAL EQUAL NOT_EQUAL AND OR NOT PLUS MINUS MOD
+%token <string_val> DIGIT_SEQUENCE TYPE IDENTIFIER
+%type <float_val> unsigned_rational
+%type <int_val> unsigned_integer
+%type <zap_expression_val> expression
+%type <vector_val> init_declarator_list
+%type <init_declarator_val> init_declarator
+
 %right NOT
 %left STAR DIV MOD
 %left PLUS MINUS 
@@ -14,6 +36,7 @@ extern int yylineno;
 %left AND
 %left OR
 %right ASSIGN
+%nonassoc UMINUS
 %left ','
 %start progr
 %%
@@ -76,7 +99,18 @@ function_declaration
     ;
 
 function_call
-    : IDENTIFIER '(' expression ')' ';'
+    : IDENTIFIER '(' function_argument_list ')' ';'
+    ;
+
+function_argument_list
+    : /* empty */
+    | function_argument_list function_argument
+    ;
+
+function_argument
+    : TYPE IDENTIFIER
+    | CONSTANT TYPE IDENTIFIER
+    ;
 
 declaration
     :   TYPE init_declarator_list ';'
@@ -92,11 +126,31 @@ init_declarator
     : IDENTIFIER
     | IDENTIFIER ASSIGN expression
     | IDENTIFIER '[' expression ']'
+    {
+    }
     ;
 
 expression
-    : integer
-    | rational
+    : unsigned_integer
+    {
+        $$ = create_zap_expression
+        (
+            create_zap_value(NULL, Integer),
+            Constant,
+            NULL,
+            &$1
+        );
+    }
+    | unsigned_rational
+    {
+        $$ = create_zap_expression
+        (
+            create_zap_value(NULL, Float),
+            Constant,
+            NULL,
+            &$1
+        );
+    }
     | function_call
     | IDENTIFIER
     | IDENTIFIER '(' identifier_list ')'
@@ -113,6 +167,10 @@ expression
     | expression AND expression
     | expression OR expression
     | NOT expression
+    | '(' expression ')'
+    {
+        $$ = $2;
+    }
     ;
 
 identifier_list
@@ -120,36 +178,40 @@ identifier_list
     | identifier_list ',' IDENTIFIER
     ;
 
-integer
-    : unsigned_integer
-    | sign unsigned_integer
-    ;
-
-rational
-    : unsigned_rational
-    | sign unsigned_rational
-    ;
-
-sign
-    : PLUS
-    | MINUS
-    ;
-
 unsigned_integer
     : DIGIT_SEQUENCE
+    {
+        $$ = atoi($1);
+        free($1);
+    }
     ;
 
 unsigned_rational
     : DIGIT_SEQUENCE '.' DIGIT_SEQUENCE
+    {        
+        $$ = a2tof($1, $3);
+
+        free($1);
+        free($3);
+    }
     | '.' DIGIT_SEQUENCE
+    {
+        $$ = a2tof("", $2);
+
+        free($2);
+    }
     ;
 
 %%
-int yyerror(char * s){
-    printf("eroare: %s la linia:%d\n",s,yylineno);
+int yyerror(const char * s){
+    printf("error: %s | line: %d\n",s,yylineno);
 }
 
 int main(int argc, char** argv){
+    variable_table_list = create_vector(sizeof(struct Vector), 10);
+    global_scope = create_vector(sizeof(struct Zap_Variable),10);
+    add_to_vector(variable_table_list, global_scope);
+
     yyin=fopen(argv[1],"r");
     yyparse();
 } 
