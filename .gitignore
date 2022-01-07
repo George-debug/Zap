@@ -1,5 +1,3 @@
-# Ignore everything
-./build
+build
 ./src/y.tab.c
-./src/y.tab.h
-./lex.yy.c
+./s.yy.c
