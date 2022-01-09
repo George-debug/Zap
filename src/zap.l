@@ -2,18 +2,42 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "umbrella.h"
+
 #include "y.tab.h"
 %}
 %option noyywrap
 %%
 "int"|"float"|"char"|"string"|"bool"   {
-        yylval.string_val=strdup(yytext);
+        
+        switch (yytext[0])
+        {
+        case 'i':
+            yylval.zap_variable_type_val = Integer;
+            break;
+
+        case 'f':
+            yylval.zap_variable_type_val = Floating_Point;
+            break;
+
+        case 'c':
+            yylval.zap_variable_type_val = Character;
+            break;
+
+        case 's':
+            yylval.zap_variable_type_val = String;
+            break;
+
+        default:
+            yylval.zap_variable_type_val = Boolean;
+            break;
+        }
         return TYPE;
     }
 
 "return"    {return RETURN;}
-":="    {return ASSIGN;}
-"constant"  {return CONSTANT;}
+"="    {return ASSIGN;}
+"const"  {return CONSTANT;}
 "if"    {return IF;}
 "else" {return ELSE;}
 "while" {return WHILE;}
@@ -40,8 +64,8 @@
 "%" {return MOD;}
 
 [_a-zA-Z][_a-zA-Z0-9]*  {
-        return IDENTIFIER;
         yylval.string_val=strdup(yytext);
+        return IDENTIFIER;
     }
 [0-9]+ {
         yylval.string_val=strdup(yytext);

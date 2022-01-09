@@ -18,3 +18,29 @@ float a2tof(const char *integer_part, const char *fractional_part)
 
     return rv;
 }
+
+void run_zap_assignation(struct Zap_Assignation *item)
+{
+}
+
+void run_zap_declaration(struct Zap_Declaration *item)
+{
+}
+
+struct Zap_Signal *run_zap_block_item(struct Zap_Block_Item *b_item)
+{
+    struct Zap_Signal *rv = create_zap_signal(Nothing, NULL);
+
+    switch (b_item->item_type)
+    {
+    case Assignation:
+        run_zap_assignation(b_item->item);
+        return rv;
+
+    case Declaration:
+        run_zap_declaration(b_item->item);
+        return rv;
+    }
+
+    return rv;
+}

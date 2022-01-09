@@ -32,6 +32,7 @@ void add_to_vector(struct Vector *v, void *cell)
     char *aux = v->arr;
     void *loc = aux + (v->size * v->cell_size);
     memcpy(loc, cell, v->cell_size);
+    ++v->size;
 
     free(cell);
     cell = loc;

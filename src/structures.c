@@ -63,7 +63,7 @@ void calculate_zap_expression(struct Zap_Expression *expr)
     }
 }
 
-struct Zap_Init_Declaration *create_zap_init_declaration(char *name, struct Zap_Expression *expr, struct Zap_Expression *size)
+struct Zap_Init_Declaration *create_zap_init_declaration(char *name, struct Zap_Expression *expr, size_t size)
 {
     struct Zap_Init_Declaration *rv = malloc(sizeof(struct Zap_Init_Declaration));
 
@@ -102,4 +102,35 @@ struct Zap_Variable *add_zap_init_declaration(struct Zap_Init_Declaration *decl)
     calculate_zap_expression(decl->expr);
 
     return create_zap_variable(decl->name, decl->expr->val, false, decl->size);
+}
+
+struct Zap_Declaration *create_zap_declaration(struct Vector *declaration_list, enum Zap_Variable_Type val_type, bool is_const)
+{
+    struct Zap_Declaration *rv = malloc(sizeof(struct Zap_Declaration));
+
+    rv->declaration_list = declaration_list;
+    rv->val_type = val_type;
+    rv->is_const = is_const;
+
+    return rv;
+}
+
+struct Zap_Assignation *create_zap_assignation(char *name, struct Zap_Expression *expr)
+{
+    struct Zap_Assignation *rv = malloc(sizeof(struct Zap_Assignation));
+
+    rv->name = name;
+    rv->expr = expr;
+
+    return rv;
+}
+
+struct Zap_Block_Item *create_zap_block_item(void *item, enum Zap_Block_Item_Type item_type)
+{
+    struct Zap_Block_Item *rv = malloc(sizeof(struct Zap_Block_Item));
+
+    rv->item = item;
+    rv->item_type = item_type;
+
+    return rv;
 }

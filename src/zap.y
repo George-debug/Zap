@@ -17,16 +17,24 @@ struct Vector *variable_table_list, *global_scope;
     struct Zap_Type_Value *zap_val;
     struct Zap_Expression *zap_expression_val;
     struct Vector *vector_val;
-    struct Zap_Init_Declaration *init_declarator_val;
+    struct Zap_Init_Declaration *zap_init_declarator_val;
+    enum Zap_Variable_Type zap_variable_type_val;
+    struct Zap_Declaration* zap_declaration_val;
+    struct Zap_Assignation* zap_assignation_val;
+    struct Zap_Block_Item* zap_block_item_val;
 }
 
 %token RETURN ASSIGN CONSTANT IF ELSE WHILE DO UNTIL VOID LESS LESS_EQUAL GREATER GREATER_EQUAL EQUAL NOT_EQUAL AND OR NOT PLUS MINUS MOD
-%token <string_val> DIGIT_SEQUENCE TYPE IDENTIFIER
+%token <string_val> DIGIT_SEQUENCE IDENTIFIER
+%token <zap_variable_type_val> TYPE
 %type <float_val> unsigned_rational
 %type <int_val> unsigned_integer
 %type <zap_expression_val> expression
-%type <vector_val> init_declarator_list
-%type <init_declarator_val> init_declarator
+%type <vector_val> init_declarator_list block_item_list compound_statement
+%type <zap_declaration_val> declaration
+%type <zap_init_declarator_val> init_declarator
+%type <zap_assignation_val> assignation
+%type <zap_block_item_val> block_item
 
 %right NOT
 %left STAR DIV MOD
@@ -41,8 +49,14 @@ struct Vector *variable_table_list, *global_scope;
 %start progr
 %%
 progr
-    : translation_unit {printf("program corect sintactic\n");}
-    | {printf("De unde program?\n");}
+    : translation_unit
+    {
+        printf("program corect sintactic\n");
+    }
+    | /* empty */
+    {
+        printf("De unde program?\n");
+    }
     ;
 
 translation_unit
@@ -52,27 +66,83 @@ translation_unit
 
 statement_unit
     : block_item
+    {
+        struct Zap_Signal* sig = run_zap_block_item($1);
+
+        switch (sig->sig_type)
+        {
+        case Continue:
+            perror("You can't have \"continue\" outside loops\n Why would that be helpful? Meh... I'll just ignore it for now!\n");
+            break;
+
+        case Return:
+            printf("Program returned ");
+
+            if(sig->carry == NULL)
+                printf("without any value\n");
+            else
+                // PRINT THE VALUE
+                printf("0\n");
+            break;
+
+        case Break:
+            perror("Break doesn't work outside loops.\n Did you mean \"return\"?")
+            break;
+
+        case Exit:
+            printf("Program exit ");
+
+            if(sig->carry == NULL)
+                printf("without any value\n");
+            else
+                // PRINT THE VALUE
+                printf("0\n");
+            break;
+        }
+    }
     | function_declaration
     ;
 
 compound_statement
     : '{' block_item_list '}'
-    | '{' '}'
+    {
+        $$ = $1;
+    }
     ;
 
 block_item_list
-    : block_item
+    : /* empty */
+    {
+        $$ = create_vector(sizeof(struct Zap_Block_Item), 10);
+    }
     | block_item_list block_item
+    {
+        add_to_vector($1, $2);
+        $$ = $1;
+    }
     ;
 
 block_item
     : declaration
-    | IDENTIFIER ASSIGN expression ';'
+    {
+        $$ = create_zap_block_item($1, Declaration);
+    }
+    | assignation
+    {
+        $$ = create_zap_block_item($1, Assignation);
+    }
     | iteration_statement
-    | selectionStatement
+    | selection_statement
     | return_statement
     | function_call
     | ';'
+    ;
+
+assignation
+    : IDENTIFIER ASSIGN expression ';'
+    {
+        $$ = create_zap_assignation($1, $3);
+    }
     ;
 
 iteration_statement
@@ -81,7 +151,7 @@ iteration_statement
     | DO compound_statement UNTIL '(' expression ')' ';'
     ;
 
-selectionStatement
+selection_statement
     : IF '(' expression ')' compound_statement
     | IF '(' expression ')' compound_statement ELSE compound_statement
     ;
@@ -114,19 +184,57 @@ function_argument
 
 declaration
     :   TYPE init_declarator_list ';'
-    |   CONSTANT TYPE init_declarator ';'
+    {
+        $$ = create_zap_declaration($2, $1, false);
+    }
+    |   CONSTANT TYPE init_declarator_list ';'
+    {
+        $$ = create_zap_declaration($3, $2, true);
+    }
     ;
 
 init_declarator_list
     : init_declarator
+    {
+        $$ = create_vector(sizeof(struct Zap_Init_Declaration), 10);
+        add_to_vector($$, $1);
+    }
     | init_declarator_list ',' init_declarator
+    {
+        add_to_vector($1, $3);
+        $$ = $1;
+    }
     ;
 
 init_declarator
     : IDENTIFIER
-    | IDENTIFIER ASSIGN expression
-    | IDENTIFIER '[' expression ']'
     {
+        $$ = create_zap_init_declaration(
+            $1,
+            0,
+            0
+        );
+    }
+    | IDENTIFIER ASSIGN expression
+    {
+        $$ = create_zap_init_declaration(
+            $1,
+            $3,
+            0
+        );
+    }
+    | IDENTIFIER '[' unsigned_integer ']'
+    {
+        if($3 == 0){
+            perror("Array: Wdym size 0?\n I got u, bro! The size is now 10\n");
+            $3 = 10;
+        }
+
+        $$ = create_zap_init_declaration(
+            $1,
+            NULL,
+            $3
+        );
     }
     ;
 
@@ -145,7 +253,7 @@ expression
     {
         $$ = create_zap_expression
         (
-            create_zap_value(NULL, Float),
+            create_zap_value(NULL, Floating_Point),
             Constant,
             NULL,
             &$1
@@ -158,6 +266,7 @@ expression
     | expression DIV expression
     | expression PLUS expression
     | expression MINUS expression
+    | expression MOD expression
     | expression LESS expression
     | expression LESS_EQUAL expression
     | expression GREATER expression

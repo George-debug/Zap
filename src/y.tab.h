@@ -76,8 +76,8 @@ extern int yydebug;
     MINUS = 277,                   /* MINUS  */
     MOD = 278,                     /* MOD  */
     DIGIT_SEQUENCE = 279,          /* DIGIT_SEQUENCE  */
-    TYPE = 280,                    /* TYPE  */
-    IDENTIFIER = 281,              /* IDENTIFIER  */
+    IDENTIFIER = 280,              /* IDENTIFIER  */
+    TYPE = 281,                    /* TYPE  */
     STAR = 282,                    /* STAR  */
     DIV = 283,                     /* DIV  */
     UMINUS = 284                   /* UMINUS  */
@@ -111,8 +111,8 @@ extern int yydebug;
 #define MINUS 277
 #define MOD 278
 #define DIGIT_SEQUENCE 279
-#define TYPE 280
-#define IDENTIFIER 281
+#define IDENTIFIER 280
+#define TYPE 281
 #define STAR 282
 #define DIV 283
 #define UMINUS 284
@@ -129,9 +129,12 @@ union YYSTYPE
     struct Zap_Type_Value *zap_val;
     struct Zap_Expression *zap_expression_val;
     struct Vector *vector_val;
-    struct Zap_Init_Declaration *init_declarator_val;
+    struct Zap_Init_Declaration *zap_init_declarator_val;
+    enum Zap_Variable_Type zap_variable_type_val;
+    struct Zap_Declaration* zap_declaration_val;
+    struct Zap_Assignation* zap_assignation_val;
 
-#line 135 "y.tab.h"
+#line 138 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
