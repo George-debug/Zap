@@ -69,10 +69,10 @@ translation_unit
 statement_unit
     : block_item
     {
-        printf("I'll run\n");
+        //printf("I'll run\n");
         struct Zap_Signal* sig = run_zap_block_item($1);
 
-        printf("I ran\n");
+        //printf("I ran\n");
 
         switch (sig->sig_type)
         {
@@ -118,12 +118,12 @@ compound_statement
 block_item_list
     : /* empty */
     {
-        printf("start block_item_list\n");
+        //printf("start block_item_list\n");
         $$ = create_vector(sizeof(struct Zap_Block_Item), 10);
     }
     | block_item_list block_item
     {
-        printf("continue block_item_list\n");
+        //printf("continue block_item_list\n");
         add_to_vector($1, $2);
         $$ = $1;
     }
@@ -132,7 +132,7 @@ block_item_list
 block_item
     : declaration
     {
-        printf("create declaration\n");
+        //printf("create declaration\n");
         $$ = create_zap_block_item($1, Declaration_Type);
     }
     | assignation
@@ -144,7 +144,7 @@ block_item
     | return_statement
     | function_call ';'
     {
-        printf("call function;\n");
+        //printf("call function;\n");
         $$ = create_zap_block_item($1, Function_Call_Type);
     }
     | ';'
@@ -213,13 +213,13 @@ declaration
 init_declarator_list
     : init_declarator
     {
-        printf("begins init_declarator_list\n");
+        //printf("begins init_declarator_list\n");
         $$ = create_vector(sizeof(struct Zap_Init_Declaration), 10);
         add_to_vector($$, $1);
     }
     | init_declarator_list ',' init_declarator
     {
-        printf("continue init_declarator_list\n");
+        //printf("continue init_declarator_list\n");
         add_to_vector($1, $3);
         $$ = $1;
     }
@@ -228,7 +228,7 @@ init_declarator_list
 init_declarator
     : IDENTIFIER
     {
-        printf("begins simple init_declarator\n");
+        //printf("begins simple init_declarator\n");
         $$ = create_zap_init_declaration(
             $1,
             0,
@@ -237,7 +237,7 @@ init_declarator
     }
     | IDENTIFIER ASSIGN expression
     {
-        printf("begins assign init_declarator\n");
+        //printf("begins assign init_declarator\n");
         $$ = create_zap_init_declaration(
             $1,
             $3,
@@ -274,7 +274,7 @@ expression
     }
     | unsigned_rational
     {
-        int *aux = malloc(sizeof(float));
+        float *aux = malloc(sizeof(float));
         *aux = $1;
         $$ = create_zap_expression
         (

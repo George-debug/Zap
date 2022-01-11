@@ -15,4 +15,6 @@ void run_zap_declaration(struct Zap_Declaration *item);
 
 void print_all_variables();
 
+void print_zap_value(struct Zap_Value *val);
+
 #endif

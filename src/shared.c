@@ -8,9 +8,9 @@ struct Vector *variable_table_list, *global_scope;
 void initiate_scope()
 {
     variable_table_list = create_vector(sizeof(struct Vector), 10);
-    printf("VAR LIST MEMORY %d\n", variable_table_list->memory);
+    // printf("VAR LIST MEMORY %d\n", variable_table_list->memory);
     global_scope = create_vector(sizeof(struct Zap_Variable), 10);
-    printf("GLOBAL SCOPE MEMORY %d\n", global_scope->memory);
+    // printf("GLOBAL SCOPE MEMORY %d\n", global_scope->memory);
     add_to_vector(variable_table_list, global_scope);
 }
 
@@ -33,13 +33,13 @@ float a2tof(const char *integer_part, const char *fractional_part)
 
 struct Zap_Variable *get_variable(const char *name)
 {
-    printf("in get_variable\n");
+    // printf("in get_variable\n");
     size_t i = variable_table_list->size;
     do
     {
         --i;
         struct Vector *scope = get_element(variable_table_list, i);
-        printf("scope location = %d\n", scope);
+        // printf("scope location = %d\n", scope);
 
         for (size_t j = 0; j < scope->size; ++j)
         {
@@ -49,7 +49,7 @@ struct Zap_Variable *get_variable(const char *name)
                 return scope_var;
         }
     } while (i > 0);
-    printf("out get_variable\n");
+    // printf("out get_variable\n");
     return NULL;
 }
 
@@ -123,9 +123,9 @@ void run_zap_declaration(struct Zap_Declaration *item)
     // printf("%d\n", item->declaration_list->size);
     for (size_t i = 0; i < item->declaration_list->size; ++i)
     {
-        printf("sooon decl\n");
+        // printf("sooon decl\n");
         struct Zap_Init_Declaration *decl = get_element(item->declaration_list, i);
-        printf("decl made %s %d\n", decl->name, decl->size);
+        // printf("decl made %s %d\n", decl->name, decl->size);
 
         run_zap_init_declaration(decl, item->val_type, item->is_const);
     }
@@ -171,10 +171,28 @@ void print_all_variables()
                 printf("%s NULL, ", scope_var->name);
                 continue;
             }
-            printf("%s %d, ", scope_var->name, *aux);
+            printf("%s | ", scope_var->name);
+
+            print_zap_value(scope_var->val);
         }
 
         printf("\n");
     }
     printf("\n");
+}
+
+void print_zap_value(struct Zap_Value *val)
+{
+    switch (val->val_type)
+    {
+    case Integer:
+        int *auxi = val->val;
+        printf("value integer = %d\n", *auxi);
+        break;
+
+    case Floating_Point:
+        float *auxf = val->val;
+        printf("value float = %f\n", *auxf);
+        break;
+    }
 }

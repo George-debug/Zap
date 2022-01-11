@@ -51,8 +51,10 @@ struct Zap_Value *calculate_zap_expression(struct Zap_Expression *expr)
 
     case Constant:
         struct Zap_Value *rv = expr->carry;
-        printf("value expr = %d\n", rv->val);
-        return expr->carry;
+
+        print_zap_value(rv);
+
+        return rv;
     }
 
     return NULL;

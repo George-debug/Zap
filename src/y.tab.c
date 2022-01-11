@@ -1381,10 +1381,10 @@ yyreduce:
   case 6: /* statement_unit: block_item  */
 #line 71 "zap.y"
     {
-        printf("I'll run\n");
+        //printf("I'll run\n");
         struct Zap_Signal* sig = run_zap_block_item((yyvsp[0].zap_block_item_val));
 
-        printf("I ran\n");
+        //printf("I ran\n");
 
         switch (sig->sig_type)
         {
@@ -1431,7 +1431,7 @@ yyreduce:
   case 9: /* block_item_list: %empty  */
 #line 120 "zap.y"
     {
-        printf("start block_item_list\n");
+        //printf("start block_item_list\n");
         (yyval.vector_val) = create_vector(sizeof(struct Zap_Block_Item), 10);
     }
 #line 1438 "y.tab.c"
@@ -1440,7 +1440,7 @@ yyreduce:
   case 10: /* block_item_list: block_item_list block_item  */
 #line 125 "zap.y"
     {
-        printf("continue block_item_list\n");
+        //printf("continue block_item_list\n");
         add_to_vector((yyvsp[-1].vector_val), (yyvsp[0].zap_block_item_val));
         (yyval.vector_val) = (yyvsp[-1].vector_val);
     }
@@ -1450,7 +1450,7 @@ yyreduce:
   case 11: /* block_item: declaration  */
 #line 134 "zap.y"
     {
-        printf("create declaration\n");
+        //printf("create declaration\n");
         (yyval.zap_block_item_val) = create_zap_block_item((yyvsp[0].zap_declaration_val), Declaration_Type);
     }
 #line 1457 "y.tab.c"
@@ -1467,7 +1467,7 @@ yyreduce:
   case 16: /* block_item: function_call ';'  */
 #line 146 "zap.y"
     {
-        printf("call function;\n");
+        //printf("call function;\n");
         (yyval.zap_block_item_val) = create_zap_block_item((yyvsp[-1].zap_function_call_val), Function_Call_Type);
     }
 #line 1474 "y.tab.c"
@@ -1510,7 +1510,7 @@ yyreduce:
   case 37: /* init_declarator_list: init_declarator  */
 #line 215 "zap.y"
     {
-        printf("begins init_declarator_list\n");
+        //printf("begins init_declarator_list\n");
         (yyval.vector_val) = create_vector(sizeof(struct Zap_Init_Declaration), 10);
         add_to_vector((yyval.vector_val), (yyvsp[0].zap_init_declarator_val));
     }
@@ -1520,7 +1520,7 @@ yyreduce:
   case 38: /* init_declarator_list: init_declarator_list ',' init_declarator  */
 #line 221 "zap.y"
     {
-        printf("continue init_declarator_list\n");
+        //printf("continue init_declarator_list\n");
         add_to_vector((yyvsp[-2].vector_val), (yyvsp[0].zap_init_declarator_val));
         (yyval.vector_val) = (yyvsp[-2].vector_val);
     }
@@ -1530,7 +1530,7 @@ yyreduce:
   case 39: /* init_declarator: IDENTIFIER  */
 #line 230 "zap.y"
     {
-        printf("begins simple init_declarator\n");
+        //printf("begins simple init_declarator\n");
         (yyval.zap_init_declarator_val) = create_zap_init_declaration(
             (yyvsp[0].string_val),
             0,
@@ -1543,7 +1543,7 @@ yyreduce:
   case 40: /* init_declarator: IDENTIFIER ASSIGN expression  */
 #line 239 "zap.y"
     {
-        printf("begins assign init_declarator\n");
+        //printf("begins assign init_declarator\n");
         (yyval.zap_init_declarator_val) = create_zap_init_declaration(
             (yyvsp[-2].string_val),
             (yyvsp[0].zap_expression_val),
@@ -1589,7 +1589,7 @@ yyreduce:
   case 43: /* expression: unsigned_rational  */
 #line 276 "zap.y"
     {
-        int *aux = malloc(sizeof(float));
+        float *aux = malloc(sizeof(float));
         *aux = (yyvsp[0].float_val);
         (yyval.zap_expression_val) = create_zap_expression
         (
