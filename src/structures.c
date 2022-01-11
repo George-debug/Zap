@@ -2,6 +2,8 @@
 
 #include <stdlib.h>
 
+#include "shared.h"
+
 struct Zap_Value *create_zap_value(void *val, enum Zap_Variable_Type val_type)
 {
     struct Zap_Value *rv = malloc(sizeof(struct Zap_Value));
@@ -40,9 +42,11 @@ struct Zap_Value *calculate_zap_expression(struct Zap_Expression *expr)
     switch (expr->expr_type)
     {
     case Unary:
+    {
         struct Zap_Expression *child = expr->carry;
         calculate_unary_operator calculate1 = expr->handle_carry;
         return calculate1(calculate_zap_expression(child));
+    }
 
     case Binary:
         struct Zap_Expression *children = expr->carry;
@@ -50,11 +54,18 @@ struct Zap_Value *calculate_zap_expression(struct Zap_Expression *expr)
         return calculate2(calculate_zap_expression(children), calculate_zap_expression(children + 1));
 
     case Constant:
-        struct Zap_Value *rv = expr->carry;
+        struct Zap_Value *rv_constant = expr->carry;
 
-        print_zap_value(rv);
+        print_zap_value(rv_constant);
 
-        return rv;
+        return rv_constant;
+
+    case Variable:
+        struct Zap_Value *rv_variable = get_variable_value(expr->carry);
+
+        print_zap_value(rv_variable);
+
+        return rv_variable;
     }
 
     return NULL;

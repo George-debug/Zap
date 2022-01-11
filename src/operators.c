@@ -60,7 +60,6 @@ struct Zap_Value *addition(struct Zap_Value *a, struct Zap_Value *b) // !! add c
         switch (right->val_type)
         {
         case Floating_Point: // float - float | float - intreg avem deja mai sus
-            printf("adunare float float\n");
             float *valff = malloc(sizeof(float));
 
             *valff = *(float *)left->val + *(float *)right->val;

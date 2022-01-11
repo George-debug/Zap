@@ -81,6 +81,14 @@ struct Zap_Assignation
 
 struct Zap_Assignation *create_zap_assignation(char *name, struct Zap_Expression *expr);
 
+struct Zap_Selection_Statement
+{
+    struct Zap_Expression *condition;
+    struct Vector *if_true, *if_false;
+};
+
+struct Zap_Selection_Statement *create_zap_selection_statement(struct Zap_Expression *condition, struct Vector *if_true, struct Vector *if_false);
+
 enum Zap_Block_Item_Type
 {
     Declaration_Type,

@@ -284,6 +284,14 @@ expression
         );
     }
     | IDENTIFIER
+    {
+        $$ = create_zap_expression
+        (
+            Variable,
+            NULL,
+            $1
+        );
+    }
     | expression STAR expression
     | expression DIV expression
     | expression PLUS expression
@@ -310,6 +318,7 @@ expression
         printf("expression ()\n");
         $$ = $2;
     }
+    | MINUS expression %prec UMINUS
     ;
 
 identifier_list
