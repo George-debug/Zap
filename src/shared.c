@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct Vector *variable_table_list;
 
@@ -67,8 +68,7 @@ void run_zap_assignation(struct Zap_Assignation *item)
 
     if (var->val->val_type != calculated_value->val_type)
     {
-        perror("Expression has different output! I guess a convertion would work! !!\n");
-        exit(1);
+        calculated_value = convert_variable_value(calculated_value, var->val->val_type); // !! some memory issues here 100%
     }
     var->val = calculated_value;
 }
@@ -112,8 +112,6 @@ void run_zap_init_declaration(struct Zap_Init_Declaration *item, enum Zap_Variab
     // printf("%s\n", var->name);
     struct Zap_Assignation *current_assignation = create_zap_assignation(var->name, item->expr);
 
-    print_all_variables();
-
     run_zap_assignation(current_assignation);
 }
 
@@ -131,10 +129,25 @@ void run_zap_declaration(struct Zap_Declaration *item)
     }
 }
 
+struct Zap_Signal *run_zap_selection_statement(struct Zap_Selection_Statement *item)
+{
+    bool condition_truth = *(bool *)(convert_variable_value(calculate_zap_expression(item->condition), Boolean)->val);
+
+    if (condition_truth)
+        return run_zap_block_item_list(item->if_true);
+
+    if (item->if_false != NULL)
+        return run_zap_block_item_list(item->if_false);
+
+    return create_zap_signal(Nothing_Signal, NULL);
+}
+
 struct Zap_Signal *run_zap_block_item(struct Zap_Block_Item *b_item)
 {
     struct Zap_Signal *rv = create_zap_signal(Nothing_Signal, NULL);
 
+    //!! assignation and delcaration can have signals too
+    //!! so what is above is memory leak
     switch (b_item->item_type)
     {
     case Assignation_Type:
@@ -144,6 +157,9 @@ struct Zap_Signal *run_zap_block_item(struct Zap_Block_Item *b_item)
     case Declaration_Type:
         run_zap_declaration(b_item->item);
         return rv;
+
+    case Selection_Statement_Type:
+        return run_zap_selection_statement(b_item->item);
     }
 
     return rv;
@@ -186,14 +202,45 @@ void print_zap_value(struct Zap_Value *val)
     switch (val->val_type)
     {
     case Integer:
-        int *auxi = val->val;
-        printf("value integer = %d\n", *auxi);
+    {
+        int *aux = val->val;
+        printf("value integer = %d\n", *aux);
         break;
+    }
 
     case Floating_Point:
-        float *auxf = val->val;
-        printf("value float = %f\n", *auxf);
+    {
+        float *aux = val->val;
+        printf("value float = %f\n", *aux);
         break;
+    }
+
+    case String:
+    {
+        char *aux = val->val;
+        printf("value string = \"%s\"\n", aux);
+        break;
+    }
+
+    case Character:
+    {
+        char *aux = val->val;
+        printf("value character = \"%c\"", *aux);
+        break;
+    }
+
+    case Boolean:
+    {
+        bool *aux = val->val;
+        printf("value boolean = %s\n", *aux ? "true" : "false");
+        break;
+    }
+
+    default:
+    {
+        printf("variable type unknown\n");
+        break;
+    }
     }
 }
 
@@ -322,6 +369,51 @@ struct Zap_Value *convert_variable_value(struct Zap_Value *from, enum Zap_Variab
         default:
         {
             free(rv_val);
+            rv_val = NULL;
+            break;
+        }
+        }
+
+        rv->val = rv_val;
+        break;
+    }
+
+    case String:
+    {
+        char *rv_val;
+
+        switch (from->val_type)
+        {
+        case Integer:
+        {
+            sprintf(rv_val, "%d", *(int *)from->val);
+            break;
+        }
+        case Floating_Point:
+        {
+            sprintf(rv_val, "%f", *(float *)from->val);
+            break;
+        }
+        case String:
+        {
+            rv_val = strdup((char *)from->val);
+            break;
+        }
+        case Character:
+        {
+            rv_val = malloc(sizeof(char) * 2);
+            rv_val[0] = *(char *)from->val;
+            rv_val[1] = '\0';
+            break;
+        }
+        case Boolean:
+        {
+            rv_val = strdup(*(bool *)from->val ? "true" : "false");
+            break;
+        }
+
+        default:
+        {
             rv_val = NULL;
             break;
         }

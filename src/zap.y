@@ -11,6 +11,7 @@ extern int yylineno;
 
 %}
 %union{
+    bool bool_val;
     float float_val;
     int int_val;
     char *string_val;
@@ -23,11 +24,14 @@ extern int yylineno;
     struct Zap_Assignation* zap_assignation_val;
     struct Zap_Block_Item* zap_block_item_val;
     struct Zap_Function_Call* zap_function_call_val;
+    struct Zap_Selection_Statement* zap_selection_statement_val;
 }
 
-%token RETURN ASSIGN CONSTANT IF ELSE WHILE DO UNTIL VOID LESS LESS_EQUAL GREATER GREATER_EQUAL EQUAL NOT_EQUAL AND OR NOT PLUS MINUS MOD
-%token <string_val> DIGIT_SEQUENCE IDENTIFIER
+%token RETURN ASSIGN CONSTANT IF ELSE WHILE DO UNTIL VOID LESS LESS_EQUAL GREATER GREATER_EQUAL EQUAL NOT_EQUAL AND OR NOT PLUS MINUS MOD TRUE FALSE
+%token <string_val> STRING_LITERAL DIGIT_SEQUENCE IDENTIFIER
 %token <zap_variable_type_val> TYPE
+
+%type <bool_val> boolean_constant
 %type <float_val> unsigned_rational
 %type <int_val> unsigned_integer
 %type <zap_expression_val> expression
@@ -37,6 +41,7 @@ extern int yylineno;
 %type <zap_assignation_val> assignation
 %type <zap_block_item_val> block_item
 %type <zap_function_call_val> function_call
+%type <zap_selection_statement_val> selection_statement
 
 %right NOT
 %left STAR DIV MOD
@@ -141,6 +146,9 @@ block_item
     }
     | iteration_statement
     | selection_statement
+    {
+        $$ = create_zap_block_item($1, Selection_Statement_Type);
+    }
     | return_statement
     | function_call ';'
     {
@@ -165,7 +173,13 @@ iteration_statement
 
 selection_statement
     : IF '(' expression ')' compound_statement
+    {
+        $$ = create_zap_selection_statement($3, $5, NULL);
+    }
     | IF '(' expression ')' compound_statement ELSE compound_statement
+    {
+        $$ = create_zap_selection_statement($3, $5, $7);
+    }
     ;
 
 return_statement
@@ -261,7 +275,19 @@ init_declarator
     ;
 
 expression
-    : unsigned_integer
+    : boolean_constant
+    {
+        bool *aux = malloc(sizeof(bool));
+        *aux = $1;
+
+        $$ = create_zap_expression
+        (
+            Constant,
+            NULL,
+            create_zap_value(aux, Boolean)
+        );
+    }
+    | unsigned_integer
     {
         int *aux = malloc(sizeof(int));
         *aux = $1;
@@ -281,6 +307,17 @@ expression
             Constant,
             NULL,
             create_zap_value(aux, Floating_Point)
+        );
+    }
+    | STRING_LITERAL
+    {
+        char *aux = strdup($1);
+
+        $$ = create_zap_expression
+        (
+            Constant,
+            NULL,
+            create_zap_value(aux, String)
         );
     }
     | IDENTIFIER
@@ -324,6 +361,17 @@ expression
 identifier_list
     : IDENTIFIER
     | identifier_list ',' IDENTIFIER
+    ;
+
+boolean_constant
+    : TRUE
+    {
+        $$ = true;
+    }
+    | FALSE
+    {
+        $$ = false;
+    }
     ;
 
 unsigned_integer

@@ -56,14 +56,10 @@ struct Zap_Value *calculate_zap_expression(struct Zap_Expression *expr)
     case Constant:
         struct Zap_Value *rv_constant = expr->carry;
 
-        print_zap_value(rv_constant);
-
         return rv_constant;
 
     case Variable:
         struct Zap_Value *rv_variable = get_variable_value(expr->carry);
-
-        print_zap_value(rv_variable);
 
         return rv_variable;
     }
@@ -128,6 +124,17 @@ struct Zap_Function_Call *create_zap_function_call(char *name)
     struct Zap_Function_Call *rv = malloc(sizeof(struct Zap_Function_Call));
 
     rv->name = name;
+
+    return rv;
+}
+
+struct Zap_Selection_Statement *create_zap_selection_statement(struct Zap_Expression *condition, struct Vector *if_true, struct Vector *if_false)
+{
+    struct Zap_Selection_Statement *rv = malloc(sizeof(struct Zap_Selection_Statement));
+
+    rv->condition = condition;
+    rv->if_true = if_true;
+    rv->if_false = if_false;
 
     return rv;
 }

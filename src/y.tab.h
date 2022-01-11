@@ -75,12 +75,15 @@ extern int yydebug;
     PLUS = 276,                    /* PLUS  */
     MINUS = 277,                   /* MINUS  */
     MOD = 278,                     /* MOD  */
-    DIGIT_SEQUENCE = 279,          /* DIGIT_SEQUENCE  */
-    IDENTIFIER = 280,              /* IDENTIFIER  */
-    TYPE = 281,                    /* TYPE  */
-    STAR = 282,                    /* STAR  */
-    DIV = 283,                     /* DIV  */
-    UMINUS = 284                   /* UMINUS  */
+    TRUE = 279,                    /* TRUE  */
+    FALSE = 280,                   /* FALSE  */
+    STRING_LITERAL = 281,          /* STRING_LITERAL  */
+    DIGIT_SEQUENCE = 282,          /* DIGIT_SEQUENCE  */
+    IDENTIFIER = 283,              /* IDENTIFIER  */
+    TYPE = 284,                    /* TYPE  */
+    STAR = 285,                    /* STAR  */
+    DIV = 286,                     /* DIV  */
+    UMINUS = 287                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -110,12 +113,15 @@ extern int yydebug;
 #define PLUS 276
 #define MINUS 277
 #define MOD 278
-#define DIGIT_SEQUENCE 279
-#define IDENTIFIER 280
-#define TYPE 281
-#define STAR 282
-#define DIV 283
-#define UMINUS 284
+#define TRUE 279
+#define FALSE 280
+#define STRING_LITERAL 281
+#define DIGIT_SEQUENCE 282
+#define IDENTIFIER 283
+#define TYPE 284
+#define STAR 285
+#define DIV 286
+#define UMINUS 287
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -123,6 +129,7 @@ union YYSTYPE
 {
 #line 13 "zap.y"
 
+    bool bool_val;
     float float_val;
     int int_val;
     char *string_val;
@@ -135,8 +142,9 @@ union YYSTYPE
     struct Zap_Assignation* zap_assignation_val;
     struct Zap_Block_Item* zap_block_item_val;
     struct Zap_Function_Call* zap_function_call_val;
+    struct Zap_Selection_Statement* zap_selection_statement_val;
 
-#line 140 "y.tab.h"
+#line 148 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

@@ -93,9 +93,9 @@ enum Zap_Block_Item_Type
 {
     Declaration_Type,
     Assignation_Type,
-    Iteration_Statement_Type,
+    While_Statement_Type,
     Selection_Statement_Type,
-    Return_Statement_Type,
+    Signal_Statement_Type,
     Function_Call_Type
 };
 

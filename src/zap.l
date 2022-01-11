@@ -35,6 +35,9 @@
         return TYPE;
     }
 
+"True"|"true"|"TRUE"    {return TRUE;}
+"False"|"false"|"FALSE" {return FALSE;}
+
 "return"    {return RETURN;}
 "="    {return ASSIGN;}
 "const"  {return CONSTANT;}
@@ -63,6 +66,12 @@
 "/" {return DIV;}
 "%" {return MOD;}
 
+\"[^\\\r\n]*\" {
+        yytext[yyleng - 1] = '\0';
+        yylval.string_val=strdup(yytext+1);
+        return STRING_LITERAL;
+    }
+
 [_a-zA-Z][_a-zA-Z0-9]*  {
         yylval.string_val=strdup(yytext);
         return IDENTIFIER;
@@ -72,8 +81,7 @@
         return DIGIT_SEQUENCE;
     }
 
-
-#~[\r\n]* ;
+#[^\r\n]* ; // sau \r?\n
 
 [ \t]   ;
 \n  {yylineno++;}

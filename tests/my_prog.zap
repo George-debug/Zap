@@ -1,11 +1,15 @@
-test2();
+print();
 
-float x = 4.5, y = 2.5 + 20.5, z = x + y;
+float x = 4.5, y = 2.5 + 20.5;
 
-test1_5();
+int z = x + y;
 
-x = y + 230;
-z = x;
+if(z){
+    int aux = 4 + 5;
+    z = aux;
+}
 
+print();
 
-test1();
+# float x1 = 1;
+
