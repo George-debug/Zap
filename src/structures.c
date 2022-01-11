@@ -2,8 +2,6 @@
 
 #include <stdlib.h>
 
-extern struct Vector *variable_table_list, *global_scope;
-
 struct Zap_Value *create_zap_value(void *val, enum Zap_Variable_Type val_type)
 {
     struct Zap_Value *rv = malloc(sizeof(struct Zap_Value));
@@ -26,11 +24,10 @@ struct Zap_Variable *create_zap_variable(char *name, struct Zap_Value *val, bool
     return rv;
 }
 
-struct Zap_Expression *create_zap_expression(struct Zap_Value *val, enum Expression_Type expr_type, void *handle_carry, void *carry)
+struct Zap_Expression *create_zap_expression(enum Expression_Type expr_type, void *handle_carry, void *carry)
 {
     struct Zap_Expression *rv = malloc(sizeof(struct Zap_Expression));
 
-    rv->val = val;
     rv->expr_type = expr_type;
     rv->handle_carry = handle_carry;
     rv->carry = carry;
@@ -38,29 +35,27 @@ struct Zap_Expression *create_zap_expression(struct Zap_Value *val, enum Express
     return rv;
 }
 
-void calculate_zap_expression(struct Zap_Expression *expr)
+struct Zap_Value *calculate_zap_expression(struct Zap_Expression *expr)
 {
     switch (expr->expr_type)
     {
     case Unary:
         struct Zap_Expression *child = expr->carry;
         calculate_unary_operator calculate1 = expr->handle_carry;
-        expr->val = calculate1(child->val);
-        break;
+        return calculate1(calculate_zap_expression(child));
 
     case Binary:
         struct Zap_Expression *children = expr->carry;
         calculate_binary_operator calculate2 = expr->handle_carry;
-        expr->val = calculate2(children->val, (children + 1)->val);
-        break;
+        return calculate2(calculate_zap_expression(children), calculate_zap_expression(children + 1));
 
     case Constant:
-        expr->val->val = expr->carry;
-        break;
-
-    default:
-        break;
+        struct Zap_Value *rv = expr->carry;
+        printf("value expr = %d\n", rv->val);
+        return expr->carry;
     }
+
+    return NULL;
 }
 
 struct Zap_Init_Declaration *create_zap_init_declaration(char *name, struct Zap_Expression *expr, size_t size)
@@ -72,36 +67,6 @@ struct Zap_Init_Declaration *create_zap_init_declaration(char *name, struct Zap_
     rv->size = size;
 
     return rv;
-}
-
-bool var_already_exists(const char *name)
-{
-    for (size_t i = 0; i < variable_table_list->size; ++i)
-    {
-        struct Vector *scope = get_element(variable_table_list, i);
-
-        for (size_t j = 0; j < scope->size; ++j)
-        {
-            struct Zap_Variable *scope_var = get_element(scope, j);
-
-            if (strcmp(scope_var->name, name) == 0)
-                return true;
-        }
-    }
-    return false;
-}
-
-struct Zap_Variable *add_zap_init_declaration(struct Zap_Init_Declaration *decl)
-{
-    if (var_already_exists(decl->name))
-    {
-        fprintf(stderr, "Declaration: Variable %s already exists\n", decl->name);
-        exit(1);
-    }
-
-    calculate_zap_expression(decl->expr);
-
-    return create_zap_variable(decl->name, decl->expr->val, false, decl->size);
 }
 
 struct Zap_Declaration *create_zap_declaration(struct Vector *declaration_list, enum Zap_Variable_Type val_type, bool is_const)
@@ -125,12 +90,31 @@ struct Zap_Assignation *create_zap_assignation(char *name, struct Zap_Expression
     return rv;
 }
 
+struct Zap_Signal *create_zap_signal(enum Zap_Signal_Type sig_type, void *carry)
+{
+    struct Zap_Signal *rv = malloc(sizeof(struct Zap_Signal));
+
+    rv->sig_type = sig_type;
+    rv->carry = carry;
+
+    return rv;
+}
+
 struct Zap_Block_Item *create_zap_block_item(void *item, enum Zap_Block_Item_Type item_type)
 {
     struct Zap_Block_Item *rv = malloc(sizeof(struct Zap_Block_Item));
 
     rv->item = item;
     rv->item_type = item_type;
+
+    return rv;
+}
+
+struct Zap_Function_Call *create_zap_function_call(char *name)
+{
+    struct Zap_Function_Call *rv = malloc(sizeof(struct Zap_Function_Call));
+
+    rv->name = name;
 
     return rv;
 }

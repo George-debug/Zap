@@ -7,7 +7,7 @@ struct Vector *create_vector(size_t cell_size, size_t initial_memory)
 {
     struct Vector *rv = malloc(sizeof(struct Vector));
 
-    if (initial_memory = 0)
+    if (initial_memory == 0)
     {
         perror("Vector: size 0");
         exit(1);
@@ -28,14 +28,13 @@ void add_to_vector(struct Vector *v, void *cell)
         v->memory += 10;
         v->arr = realloc(v->arr, v->memory * v->cell_size);
     }
-
     char *aux = v->arr;
     void *loc = aux + (v->size * v->cell_size);
     memcpy(loc, cell, v->cell_size);
     ++v->size;
 
-    free(cell);
-    cell = loc;
+    // free(cell);
+    // cell = loc;
 }
 
 void *get_element(struct Vector *v, size_t index)
@@ -46,6 +45,7 @@ void *get_element(struct Vector *v, size_t index)
         exit(1);
     }
     char *aux = v->arr;
+    // printf("aux location = %d\n", aux);
 
     return aux + (index * v->cell_size);
 }

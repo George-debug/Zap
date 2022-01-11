@@ -1,7 +1,6 @@
-int num1 := 4, num2 := 1;
+test2();
 
-int sum (a, b) {
-    return 2 + 2;
-}
+int x = 4, y = 2 + 20;
 
-int num1 := 4.0366666, num2 := 001.01, num3 := .1234;
+
+test1();

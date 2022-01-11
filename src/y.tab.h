@@ -133,8 +133,10 @@ union YYSTYPE
     enum Zap_Variable_Type zap_variable_type_val;
     struct Zap_Declaration* zap_declaration_val;
     struct Zap_Assignation* zap_assignation_val;
+    struct Zap_Block_Item* zap_block_item_val;
+    struct Zap_Function_Call* zap_function_call_val;
 
-#line 138 "y.tab.h"
+#line 140 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

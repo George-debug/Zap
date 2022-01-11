@@ -42,15 +42,14 @@ enum Expression_Type
 
 struct Zap_Expression
 {
-    struct Zap_Value *val;
     enum Expression_Type expr_type;
     void *handle_carry;
     void *carry;
 };
 
-struct Zap_Expression *create_zap_expression(struct Zap_Value *val, enum Expression_Type expr_type, void *handle_carry, void *carry);
+struct Zap_Expression *create_zap_expression(enum Expression_Type expr_type, void *handle_carry, void *carry);
 
-void calculate_zap_expression(struct Zap_Expression *expr);
+struct Zap_Value *calculate_zap_expression(struct Zap_Expression *expr);
 
 typedef struct Zap_Value *(*calculate_binary_operator)(struct Zap_Value *, struct Zap_Value *);
 typedef struct Zap_Value *(*calculate_unary_operator)(struct Zap_Value *);
@@ -63,9 +62,7 @@ struct Zap_Init_Declaration
     size_t size;
 };
 
-struct Zap_Init_Declaration *create_zap_init_declaration(char *name, struct Zap_Expression *expr, size_t size); //const char... posibil... momentan asa
-
-struct Zap_Variable *add_zap_init_declaration(struct Zap_Init_Declaration *decl);
+struct Zap_Init_Declaration *create_zap_init_declaration(char *name, struct Zap_Expression *expr, size_t size); // const char... posibil... momentan asa
 
 struct Zap_Declaration
 {
@@ -86,12 +83,12 @@ struct Zap_Assignation *create_zap_assignation(char *name, struct Zap_Expression
 
 enum Zap_Block_Item_Type
 {
-    Declaration,
-    Assignation,
-    Iteration_Statement,
-    Selection_Statement,
-    Return_Statement,
-    Function_Call
+    Declaration_Type,
+    Assignation_Type,
+    Iteration_Statement_Type,
+    Selection_Statement_Type,
+    Return_Statement_Type,
+    Function_Call_Type
 };
 
 struct Zap_Block_Item
@@ -104,11 +101,11 @@ struct Zap_Block_Item *create_zap_block_item(void *item, enum Zap_Block_Item_Typ
 
 enum Zap_Signal_Type
 {
-    Return,
-    Continue,
-    Break,
-    Exit,
-    Nothing
+    Return_Signal,
+    Continue_Signal,
+    Break_Signal,
+    Exit_Signal,
+    Nothing_Signal
 };
 
 struct Zap_Signal
@@ -118,5 +115,12 @@ struct Zap_Signal
 };
 
 struct Zap_Signal *create_zap_signal(enum Zap_Signal_Type sig_type, void *carry);
+
+struct Zap_Function_Call
+{
+    char *name; //!!
+};
+
+struct Zap_Function_Call *create_zap_function_call(char *name);
 
 #endif
