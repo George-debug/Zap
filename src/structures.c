@@ -1,6 +1,7 @@
 #include "structures.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "shared.h"
 
@@ -67,6 +68,20 @@ struct Zap_Value *calculate_zap_expression(struct Zap_Expression *expr)
     return NULL;
 }
 
+struct Zap_Expression *create_binary_zap_expression(struct Zap_Expression *left, struct Zap_Expression *right, calculate_binary_operator op)
+{
+    int zap_expr_size = sizeof(struct Zap_Expression);
+    struct Zap_Expression *carry = malloc(2 * zap_expr_size);
+    memcpy(carry, left, zap_expr_size);
+    memcpy(carry + 1, right, zap_expr_size);
+    return create_zap_expression(Binary, op, carry);
+}
+
+struct Zap_Expression *create_unary_zap_expression(struct Zap_Expression *val, calculate_unary_operator op)
+{
+    return create_zap_expression(Unary, op, val);
+}
+
 struct Zap_Init_Declaration *create_zap_init_declaration(char *name, struct Zap_Expression *expr, size_t size)
 {
     struct Zap_Init_Declaration *rv = malloc(sizeof(struct Zap_Init_Declaration));
@@ -99,7 +114,7 @@ struct Zap_Assignation *create_zap_assignation(char *name, struct Zap_Expression
     return rv;
 }
 
-struct Zap_Signal *create_zap_signal(enum Zap_Signal_Type sig_type, void *carry)
+struct Zap_Signal *create_zap_signal(enum Zap_Signal_Type sig_type, struct Zap_Expression *carry)
 {
     struct Zap_Signal *rv = malloc(sizeof(struct Zap_Signal));
 
@@ -135,6 +150,17 @@ struct Zap_Selection_Statement *create_zap_selection_statement(struct Zap_Expres
     rv->condition = condition;
     rv->if_true = if_true;
     rv->if_false = if_false;
+
+    return rv;
+}
+
+struct Zap_Iteration_Statement *create_zap_iteration_statement(enum Zap_Iteration_Statement_Type iteration_type, struct Zap_Expression *condition, struct Vector *block)
+{
+    struct Zap_Iteration_Statement *rv = malloc(sizeof(struct Zap_Iteration_Statement));
+
+    rv->iteration_type = iteration_type;
+    rv->condition = condition;
+    rv->block = block;
 
     return rv;
 }

@@ -160,6 +160,13 @@ struct Zap_Signal *run_zap_block_item(struct Zap_Block_Item *b_item)
 
     case Selection_Statement_Type:
         return run_zap_selection_statement(b_item->item);
+
+    case Signal_Statement_Type:
+        return b_item->item;
+
+    case Iteration_Statement_Type:
+        printf("iteration\n");
+        return rv;
     }
 
     return rv;
@@ -268,18 +275,23 @@ struct Zap_Signal *run_zap_block_item_list(struct Vector *b_item)
     struct Vector *next_scope = create_vector(sizeof(struct Zap_Variable), 10);
     add_to_vector(variable_table_list, next_scope);
 
+    struct Zap_Signal *sig = NULL;
+
     printf("now we have %d scopes\n", variable_table_list->size);
 
     for (size_t i = 0; i < b_item->size; ++i)
     {
         struct Zap_Block_Item *current_block_item = get_element(b_item, i);
-        struct Zap_Signal *sig = run_zap_block_item(current_block_item);
+        sig = run_zap_block_item(current_block_item);
 
         if (sig->sig_type != Nothing_Signal)
-            return sig;
+            break;
     }
 
     --variable_table_list->size;
+
+    if (sig != NULL)
+        return sig;
 
     return create_zap_signal(Nothing_Signal, NULL);
 }

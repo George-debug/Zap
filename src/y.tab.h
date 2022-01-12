@@ -77,13 +77,16 @@ extern int yydebug;
     MOD = 278,                     /* MOD  */
     TRUE = 279,                    /* TRUE  */
     FALSE = 280,                   /* FALSE  */
-    STRING_LITERAL = 281,          /* STRING_LITERAL  */
-    DIGIT_SEQUENCE = 282,          /* DIGIT_SEQUENCE  */
-    IDENTIFIER = 283,              /* IDENTIFIER  */
-    TYPE = 284,                    /* TYPE  */
-    STAR = 285,                    /* STAR  */
-    DIV = 286,                     /* DIV  */
-    UMINUS = 287                   /* UMINUS  */
+    BREAK = 281,                   /* BREAK  */
+    EXIT = 282,                    /* EXIT  */
+    CONTINUE = 283,                /* CONTINUE  */
+    STRING_LITERAL = 284,          /* STRING_LITERAL  */
+    DIGIT_SEQUENCE = 285,          /* DIGIT_SEQUENCE  */
+    IDENTIFIER = 286,              /* IDENTIFIER  */
+    TYPE = 287,                    /* TYPE  */
+    STAR = 288,                    /* STAR  */
+    DIV = 289,                     /* DIV  */
+    UMINUS = 290                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -115,19 +118,22 @@ extern int yydebug;
 #define MOD 278
 #define TRUE 279
 #define FALSE 280
-#define STRING_LITERAL 281
-#define DIGIT_SEQUENCE 282
-#define IDENTIFIER 283
-#define TYPE 284
-#define STAR 285
-#define DIV 286
-#define UMINUS 287
+#define BREAK 281
+#define EXIT 282
+#define CONTINUE 283
+#define STRING_LITERAL 284
+#define DIGIT_SEQUENCE 285
+#define IDENTIFIER 286
+#define TYPE 287
+#define STAR 288
+#define DIV 289
+#define UMINUS 290
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 13 "zap.y"
+#line 15 "zap.y"
 
     bool bool_val;
     float float_val;
@@ -143,8 +149,10 @@ union YYSTYPE
     struct Zap_Block_Item* zap_block_item_val;
     struct Zap_Function_Call* zap_function_call_val;
     struct Zap_Selection_Statement* zap_selection_statement_val;
+    struct Zap_Iteration_Statement* zap_iteration_statement_val;
+    struct Zap_Signal* zap_signal_val;
 
-#line 148 "y.tab.h"
+#line 156 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

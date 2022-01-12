@@ -1,4 +1,5 @@
 #include "structures.h"
+#include "shared.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -81,4 +82,15 @@ struct Zap_Value *addition(struct Zap_Value *a, struct Zap_Value *b) // !! add c
     perror("Addition is not possible!\n"); // !! Maaaaybe we can add later between what and what
     exit(1);
     return NULL; // will not reach this point
+}
+
+struct Zap_Value *negation(struct Zap_Value *a)
+{
+    struct Zap_Value *rv = convert_variable_value(a, Boolean);
+
+    bool *val = rv->val;
+
+    *val = !*val;
+
+    return rv;
 }

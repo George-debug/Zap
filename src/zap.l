@@ -38,6 +38,10 @@
 "True"|"true"|"TRUE"    {return TRUE;}
 "False"|"false"|"FALSE" {return FALSE;}
 
+"break" {return BREAK;}
+"continue" {return CONTINUE;}
+"exit" {return EXIT;}
+
 "return"    {return RETURN;}
 "="    {return ASSIGN;}
 "const"  {return CONSTANT;}

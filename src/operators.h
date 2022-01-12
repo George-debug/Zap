@@ -3,8 +3,10 @@
 
 #include "structures.h"
 
-struct Zap_Type_Value *addition(struct Zap_Type_Value *a, struct Zap_Type_Value *b);
-struct Zap_Type_Value *multiplication(struct Zap_Type_Value *a, struct Zap_Type_Value *b);
-struct Zap_Type_Value *division(struct Zap_Type_Value *a, struct Zap_Type_Value *b);
+struct Zap_Value *addition(struct Zap_Value *a, struct Zap_Value *b);
+struct Zap_Value *multiplication(struct Zap_Value *a, struct Zap_Value *b);
+struct Zap_Value *division(struct Zap_Value *a, struct Zap_Value *b);
+
+struct Zap_Value *negation(struct Zap_Value *a);
 
 #endif

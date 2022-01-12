@@ -2,11 +2,14 @@ print();
 
 float x = 4.5, y = 2.5 + 20.5;
 
-int z = x + y;
+int z = -10;
 
-if(z){
-    int aux = 4 + 5;
-    z = aux;
+while(true){
+    if(!z){
+        z = 12345;
+        break;
+    }
+    z = z + 1;
 }
 
 print();

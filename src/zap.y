@@ -1,6 +1,8 @@
 %{
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+
 #include "umbrella.h"
 
 extern FILE* yyin;
@@ -25,9 +27,11 @@ extern int yylineno;
     struct Zap_Block_Item* zap_block_item_val;
     struct Zap_Function_Call* zap_function_call_val;
     struct Zap_Selection_Statement* zap_selection_statement_val;
+    struct Zap_Iteration_Statement* zap_iteration_statement_val;
+    struct Zap_Signal* zap_signal_val;
 }
 
-%token RETURN ASSIGN CONSTANT IF ELSE WHILE DO UNTIL VOID LESS LESS_EQUAL GREATER GREATER_EQUAL EQUAL NOT_EQUAL AND OR NOT PLUS MINUS MOD TRUE FALSE
+%token RETURN ASSIGN CONSTANT IF ELSE WHILE DO UNTIL VOID LESS LESS_EQUAL GREATER GREATER_EQUAL EQUAL NOT_EQUAL AND OR NOT PLUS MINUS MOD TRUE FALSE BREAK EXIT CONTINUE
 %token <string_val> STRING_LITERAL DIGIT_SEQUENCE IDENTIFIER
 %token <zap_variable_type_val> TYPE
 
@@ -42,6 +46,8 @@ extern int yylineno;
 %type <zap_block_item_val> block_item
 %type <zap_function_call_val> function_call
 %type <zap_selection_statement_val> selection_statement
+%type <zap_iteration_statement_val> iteration_statement
+%type <zap_signal_val> signal_statement return_statement exit_statement
 
 %right NOT
 %left STAR DIV MOD
@@ -82,10 +88,13 @@ statement_unit
         switch (sig->sig_type)
         {
         case Continue_Signal:
+        {
             perror("You can't have \"continue\" outside loops\n Why would that be helpful? Meh... I'll just ignore it for now!\n");
             break;
+        }
 
         case Return_Signal:
+        {
             printf("Program returned ");
 
             if(sig->carry == NULL)
@@ -93,13 +102,18 @@ statement_unit
             else
                 // PRINT THE VALUE
                 printf("0\n");
-            break;
+
+            exit(0);
+        }
 
         case Break_Signal:
+        {
             perror("Break doesn't work outside loops.\n Did you mean \"return\"?");
             break;
+        }
 
         case Exit_Signal:
+        {
             printf("Program exit ");
 
             if(sig->carry == NULL)
@@ -107,7 +121,9 @@ statement_unit
             else
                 // PRINT THE VALUE
                 printf("0\n");
-            break;
+
+            exit(0);
+        }
         }
     }
     | function_declaration
@@ -129,7 +145,8 @@ block_item_list
     | block_item_list block_item
     {
         //printf("continue block_item_list\n");
-        add_to_vector($1, $2);
+        if($2 != NULL)
+            add_to_vector($1, $2);
         $$ = $1;
     }
     ;
@@ -145,17 +162,26 @@ block_item
         $$ = create_zap_block_item($1, Assignation_Type);
     }
     | iteration_statement
+    {
+        $$ = create_zap_block_item($1, Iteration_Statement_Type);
+    }
     | selection_statement
     {
         $$ = create_zap_block_item($1, Selection_Statement_Type);
     }
-    | return_statement
+    | signal_statement
+    {
+        $$ = create_zap_block_item($1, Signal_Statement_Type);
+    }
     | function_call ';'
     {
         //printf("call function;\n");
         $$ = create_zap_block_item($1, Function_Call_Type);
     }
     | ';'
+    {
+        $$ = NULL;
+    }
     ;
 
 assignation
@@ -167,8 +193,17 @@ assignation
 
 iteration_statement
     : WHILE '(' expression ')' compound_statement
+    {
+        $$ = create_zap_iteration_statement(While_Type, $3, $5);
+    }
     | DO compound_statement WHILE '(' expression ')' ';'
+    {
+        $$ = create_zap_iteration_statement(Do_While_Type, $5, $2);
+    }
     | DO compound_statement UNTIL '(' expression ')' ';'
+    {
+        $$ = create_zap_iteration_statement(Do_Until_Type, $5, $2);
+    }
     ;
 
 selection_statement
@@ -182,9 +217,45 @@ selection_statement
     }
     ;
 
+signal_statement
+    : return_statement
+    {
+        $$ = $1;
+    }
+    | BREAK ';'
+    {
+        $$ = create_zap_signal(Break_Signal, NULL);
+    }
+    | CONTINUE ';'
+    {
+        $$ = create_zap_signal(Continue_Signal, NULL);
+    }
+    | exit_statement
+    {
+        $$ = $1;
+    }
+    ;
+
+exit_statement
+    : EXIT expression ';'
+    {
+        $$ = create_zap_signal(Exit_Signal, $2);
+    }
+    | EXIT ';'
+    {
+        $$ = create_zap_signal(Exit_Signal, NULL);
+    }
+    ;
+
 return_statement
     : RETURN expression ';'
+    {
+        $$ = create_zap_signal(Return_Signal, $2);
+    }
     | RETURN ';'
+    {
+        $$ = create_zap_signal(Return_Signal, NULL);
+    }
     ;
 
 function_declaration
@@ -333,11 +404,7 @@ expression
     | expression DIV expression
     | expression PLUS expression
     {
-        int zap_expr_size = sizeof(struct Zap_Expression);
-        struct Zap_Expression* carry = malloc(2*zap_expr_size);
-        memcpy(carry, $1, zap_expr_size);
-        memcpy(carry+1, $3, zap_expr_size);
-        $$ = create_zap_expression(Binary, addition, carry);
+        $$ = create_binary_zap_expression($1, $3, addition);
     }
     | expression MINUS expression
     | expression MOD expression
@@ -350,6 +417,9 @@ expression
     | expression AND expression
     | expression OR expression
     | NOT expression
+    {
+        create_unary_zap_expression($2, negation);
+    }
     | '(' expression ')'
     {
         printf("expression ()\n");
