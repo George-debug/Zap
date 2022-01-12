@@ -141,11 +141,21 @@ struct Zap_Signal
 
 struct Zap_Signal *create_zap_signal(enum Zap_Signal_Type sig_type, struct Zap_Expression *carry);
 
-struct Zap_Function_Call
+struct Zap_Function_Declaration
 {
-    char *name; //!!
+    char *name;
+    struct Vector *parameter_list, *block;
+    enum Zap_Variable_Type *function_type;
 };
 
-struct Zap_Function_Call *create_zap_function_call(char *name);
+struct Zap_Function_Declaration *create_zap_function_declaration(enum Zap_Variable_Type *function_type, char *name, struct Vector *parameter_list, struct Vector *block);
+
+struct Zap_Function_Call
+{
+    char *name;
+    struct Vector *argument_list;
+};
+
+struct Zap_Function_Call *create_zap_function_call(char *name, struct Vector *argument_list);
 
 #endif

@@ -1,18 +1,9 @@
-print();
+string zap = "11" + "22"; # "1122"
 
-float x = 4.5, y = 2.5 + 20.5;
+print(zap);
 
-int z = -10;
+int zap_int = zap;
 
-while(true){
-    if(!z){
-        z = 12345;
-        break;
-    }
-    z = z + 1;
-}
+print(zap_int); # 1122
 
-print();
-
-# float x1 = 1;
-
+print("pot pune cat vreau", zap, zap_int);

@@ -151,8 +151,9 @@ union YYSTYPE
     struct Zap_Selection_Statement* zap_selection_statement_val;
     struct Zap_Iteration_Statement* zap_iteration_statement_val;
     struct Zap_Signal* zap_signal_val;
+    struct Zap_Function_Declaration *zap_function_declaration_val;
 
-#line 156 "y.tab.h"
+#line 157 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

@@ -50,19 +50,29 @@ struct Zap_Value *calculate_zap_expression(struct Zap_Expression *expr)
     }
 
     case Binary:
+    {
         struct Zap_Expression *children = expr->carry;
         calculate_binary_operator calculate2 = expr->handle_carry;
         return calculate2(calculate_zap_expression(children), calculate_zap_expression(children + 1));
-
+    }
     case Constant:
+    {
         struct Zap_Value *rv_constant = expr->carry;
 
         return rv_constant;
+    }
 
     case Variable:
+    {
         struct Zap_Value *rv_variable = get_variable_value(expr->carry);
 
         return rv_variable;
+    }
+    default:
+    {
+        fprintf(stderr, "Somehow your expression can't be evaluated... Expression of type %d, btw!", expr->expr_type);
+        exit(1);
+    }
     }
 
     return NULL;
@@ -134,11 +144,24 @@ struct Zap_Block_Item *create_zap_block_item(void *item, enum Zap_Block_Item_Typ
     return rv;
 }
 
-struct Zap_Function_Call *create_zap_function_call(char *name)
+struct Zap_Function_Declaration *create_zap_function_declaration(enum Zap_Variable_Type *function_type, char *name, struct Vector *parameter_list, struct Vector *block)
+{
+    struct Zap_Function_Declaration *rv = malloc(sizeof(struct Zap_Function_Declaration));
+
+    rv->function_type = function_type;
+    rv->name = name;
+    rv->parameter_list = parameter_list;
+    rv->block = block;
+
+    return rv;
+}
+
+struct Zap_Function_Call *create_zap_function_call(char *name, struct Vector *argument_list)
 {
     struct Zap_Function_Call *rv = malloc(sizeof(struct Zap_Function_Call));
 
     rv->name = name;
+    rv->argument_list = argument_list;
 
     return rv;
 }

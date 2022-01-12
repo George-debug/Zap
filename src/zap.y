@@ -29,6 +29,7 @@ extern int yylineno;
     struct Zap_Selection_Statement* zap_selection_statement_val;
     struct Zap_Iteration_Statement* zap_iteration_statement_val;
     struct Zap_Signal* zap_signal_val;
+    struct Zap_Function_Declaration *zap_function_declaration_val;
 }
 
 %token RETURN ASSIGN CONSTANT IF ELSE WHILE DO UNTIL VOID LESS LESS_EQUAL GREATER GREATER_EQUAL EQUAL NOT_EQUAL AND OR NOT PLUS MINUS MOD TRUE FALSE BREAK EXIT CONTINUE
@@ -39,15 +40,16 @@ extern int yylineno;
 %type <float_val> unsigned_rational
 %type <int_val> unsigned_integer
 %type <zap_expression_val> expression
-%type <vector_val> init_declarator_list block_item_list compound_statement
+%type <vector_val> init_declarator_list block_item_list compound_statement function_argument_list function_argument_list_or_empty function_parameter_list function_parameter_list_or_empty
 %type <zap_declaration_val> declaration
-%type <zap_init_declarator_val> init_declarator
+%type <zap_init_declarator_val> init_declarator function_parameter
 %type <zap_assignation_val> assignation
 %type <zap_block_item_val> block_item
 %type <zap_function_call_val> function_call
 %type <zap_selection_statement_val> selection_statement
 %type <zap_iteration_statement_val> iteration_statement
 %type <zap_signal_val> signal_statement return_statement exit_statement
+%type <zap_function_declaration_val> function_declaration
 
 %right NOT
 %left STAR DIV MOD
@@ -139,12 +141,10 @@ compound_statement
 block_item_list
     : /* empty */
     {
-        //printf("start block_item_list\n");
         $$ = create_vector(sizeof(struct Zap_Block_Item), 10);
     }
     | block_item_list block_item
     {
-        //printf("continue block_item_list\n");
         if($2 != NULL)
             add_to_vector($1, $2);
         $$ = $1;
@@ -154,7 +154,6 @@ block_item_list
 block_item
     : declaration
     {
-        //printf("create declaration\n");
         $$ = create_zap_block_item($1, Declaration_Type);
     }
     | assignation
@@ -175,7 +174,6 @@ block_item
     }
     | function_call ';'
     {
-        //printf("call function;\n");
         $$ = create_zap_block_item($1, Function_Call_Type);
     }
     | ';'
@@ -259,29 +257,55 @@ return_statement
     ;
 
 function_declaration
-    : TYPE IDENTIFIER '(' identifier_list ')' compound_statement
-    | TYPE IDENTIFIER '(' ')' compound_statement
-    | VOID IDENTIFIER '(' identifier_list ')' compound_statement
-    | VOID IDENTIFIER '(' ')' compound_statement
-    ;
-
-function_call
-    : IDENTIFIER '(' function_argument_list ')'
+    : TYPE IDENTIFIER '(' function_parameter_list_or_empty ')' compound_statement
     {
-        print_all_variables();
+        enum Zap_Variable_Type* var_type = malloc(sizeof(enum Zap_Variable_Type));
+        *var_type = $1;
 
-        $$ = create_zap_function_call($1);
+        $$ = create_zap_function_declaration(var_type, $2, $4, $6);
+    }
+    | VOID IDENTIFIER '(' function_parameter_list_or_empty ')' compound_statement
+    {
+        $$ = create_zap_function_declaration(NULL, $2, $4, $6);
     }
     ;
 
-function_argument_list
-    : /* empty */
-    | function_argument_list function_argument
+function_call
+    : IDENTIFIER '('function_argument_list_or_empty ')'
+    {
+        $$ = create_zap_function_call($1, $3);
+    }
     ;
 
-function_argument
+
+function_parameter_list_or_empty
+    : /* empty */
+    {
+        $$ = create_vector(sizeof(struct Zap_Init_Declaration), 1);
+    }
+    | function_parameter_list
+    {
+        $$ = $1;
+    }
+    ;
+
+function_parameter_list
+    : function_parameter
+    {
+        $$ = create_vector(sizeof(struct Zap_Init_Declaration), 10);
+    }
+    | function_parameter_list ',' function_parameter
+    {
+        add_to_vector($1, $3);
+        $$ = $1;
+    }
+    ;
+
+function_parameter
     : TYPE IDENTIFIER
-    | CONSTANT TYPE IDENTIFIER
+    {
+        $$ = create_zap_init_declaration($2, NULL, 0);
+    }
     ;
 
 declaration
@@ -401,24 +425,60 @@ expression
         );
     }
     | expression STAR expression
+    {
+        $$ = create_binary_zap_expression($1, $3, multiplication);
+    }
     | expression DIV expression
+    {
+        $$ = create_binary_zap_expression($1, $3, division);
+    }
     | expression PLUS expression
     {
         $$ = create_binary_zap_expression($1, $3, addition);
     }
     | expression MINUS expression
+    {
+        $$ = create_binary_zap_expression($1, $3, reduction);
+    }
     | expression MOD expression
+    {
+        $$ = create_binary_zap_expression($1, $3, modular);
+    }
     | expression LESS expression
+    {
+        $$ = create_binary_zap_expression($1, $3, less);
+    }
     | expression LESS_EQUAL expression
+    {
+        $$ = create_binary_zap_expression($1, $3, less_equal);
+    }
     | expression GREATER expression
+    {
+        $$ = create_binary_zap_expression($1, $3, greater);
+    }
     | expression GREATER_EQUAL expression
+    {
+        $$ = create_binary_zap_expression($1, $3, greater_equal);
+    }
     | expression EQUAL expression
+    {
+        $$ = create_binary_zap_expression($1, $3, equal);
+    }
     | expression NOT_EQUAL expression
+    {
+        $$ = create_binary_zap_expression($1, $3, not_equal);
+    }
     | expression AND expression
+    {
+        $$ = create_binary_zap_expression($1, $3, conjunction);
+    }
     | expression OR expression
+    {
+        $$ = create_binary_zap_expression($1, $3, disjunction);
+    }
     | NOT expression
     {
-        create_unary_zap_expression($2, negation);
+        $$ = create_unary_zap_expression($2, negation);
     }
     | '(' expression ')'
     {
@@ -426,11 +486,34 @@ expression
         $$ = $2;
     }
     | MINUS expression %prec UMINUS
+    {
+        $$ = create_unary_zap_expression($2, uminus_operator);
+    }
     ;
 
-identifier_list
-    : IDENTIFIER
-    | identifier_list ',' IDENTIFIER
+function_argument_list_or_empty
+    : /* empty */
+    {
+        $$ = create_vector(sizeof(struct Zap_Expression), 1);
+    }
+    | function_argument_list
+    {
+        $$ = $1;
+    }
+    ;
+
+function_argument_list
+    : expression
+    {
+        $$ = create_vector(sizeof(struct Zap_Expression), 10);
+
+        add_to_vector($$, $1);
+    }
+    | function_argument_list ',' expression
+    {
+        add_to_vector($1, $3);
+        $$ = $1;
+    }
     ;
 
 boolean_constant

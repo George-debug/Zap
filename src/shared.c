@@ -4,11 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct Vector *variable_table_list;
+struct Vector *variable_table_list, *function_table_list;
 
 void initiate_scope()
 {
     variable_table_list = create_vector(sizeof(struct Vector), 10);
+    function_table_list = create_vector(sizeof(struct Zap_Function_Declaration), 10);
     // printf("VAR LIST MEMORY %d\n", variable_table_list->memory);
     struct Vector *global_scope = create_vector(sizeof(struct Zap_Variable), 10);
     // printf("GLOBAL SCOPE MEMORY %d\n", global_scope->memory);
@@ -129,15 +130,68 @@ void run_zap_declaration(struct Zap_Declaration *item)
     }
 }
 
+bool calculate_condition(struct Zap_Expression *condition)
+{
+    return *(bool *)(convert_variable_value(calculate_zap_expression(condition), Boolean)->val);
+}
+
 struct Zap_Signal *run_zap_selection_statement(struct Zap_Selection_Statement *item)
 {
-    bool condition_truth = *(bool *)(convert_variable_value(calculate_zap_expression(item->condition), Boolean)->val);
+    bool condition_truth = calculate_condition(item->condition);
 
     if (condition_truth)
         return run_zap_block_item_list(item->if_true);
 
     if (item->if_false != NULL)
         return run_zap_block_item_list(item->if_false);
+
+    return create_zap_signal(Nothing_Signal, NULL);
+}
+
+struct Zap_Signal *run_zap_iteration_statement(struct Zap_Iteration_Statement *item)
+{
+    switch (item->iteration_type)
+    {
+
+    case While_Type:
+    {
+        bool condition_truth = calculate_condition(item->condition);
+
+        while (condition_truth)
+        {
+            struct Zap_Signal *rv = run_zap_block_item_list(item->block);
+
+            if (rv->sig_type != Nothing_Signal)
+                return rv;
+
+            condition_truth = calculate_condition(item->condition);
+        }
+        return create_zap_signal(Nothing_Signal, NULL);
+    }
+
+    case Do_While_Type:
+    {
+        struct Zap_Signal *rv = run_zap_block_item_list(item->block);
+
+        if (rv->sig_type != Nothing_Signal)
+            return rv;
+
+        return run_zap_iteration_statement(create_zap_iteration_statement(While_Type, item->condition, item->block));
+    }
+
+    case Do_Until_Type:
+    {
+        struct Zap_Expression *not_condition = create_unary_zap_expression(item->condition, negation);
+
+        return run_zap_iteration_statement(create_zap_iteration_statement(Do_While_Type, not_condition, item->block));
+    }
+
+    default:
+    {
+        perror("What type of iteration is this?\n");
+        exit(1);
+    }
+    }
 
     return create_zap_signal(Nothing_Signal, NULL);
 }
@@ -165,8 +219,13 @@ struct Zap_Signal *run_zap_block_item(struct Zap_Block_Item *b_item)
         return b_item->item;
 
     case Iteration_Statement_Type:
-        printf("iteration\n");
-        return rv;
+        return run_zap_iteration_statement(b_item->item);
+
+    case Function_Call_Type:
+        return run_zap_function_call(b_item->item);
+
+    default:
+        fprintf(stderr, "I don't know what type of block_item is %d\n", b_item->item_type);
     }
 
     return rv;
@@ -211,41 +270,41 @@ void print_zap_value(struct Zap_Value *val)
     case Integer:
     {
         int *aux = val->val;
-        printf("value integer = %d\n", *aux);
+        printf("%d", *aux);
         break;
     }
 
     case Floating_Point:
     {
         float *aux = val->val;
-        printf("value float = %f\n", *aux);
+        printf("%f", *aux);
         break;
     }
 
     case String:
     {
         char *aux = val->val;
-        printf("value string = \"%s\"\n", aux);
+        printf("\"%s\"", aux);
         break;
     }
 
     case Character:
     {
         char *aux = val->val;
-        printf("value character = \"%c\"", *aux);
+        printf("'%c'", *aux);
         break;
     }
 
     case Boolean:
     {
         bool *aux = val->val;
-        printf("value boolean = %s\n", *aux ? "true" : "false");
+        printf("%s", *aux ? "true" : "false");
         break;
     }
 
     default:
     {
-        printf("variable type unknown\n");
+        printf("??unknown??");
         break;
     }
     }
@@ -277,7 +336,7 @@ struct Zap_Signal *run_zap_block_item_list(struct Vector *b_item)
 
     struct Zap_Signal *sig = NULL;
 
-    printf("now we have %d scopes\n", variable_table_list->size);
+    // printf("now we have %d scopes\n", variable_table_list->size);
 
     for (size_t i = 0; i < b_item->size; ++i)
     {
@@ -479,6 +538,53 @@ struct Zap_Value *convert_variable_value(struct Zap_Value *from, enum Zap_Variab
         perror("U made an oopsie! Conversion not possible!\n"); // !! Maybe you can write from what to what...
         exit(1);
     }
+
+    return rv;
+}
+
+void add_function(struct Zap_Function_Declaration *decl)
+{
+    add_to_vector(function_table_list, decl);
+}
+
+struct Zap_Function_Declaration *get_function_declaration(const char *name)
+{
+    struct Zap_Function_Declaration *rv;
+
+    for (size_t i = 0; i < function_table_list->size; ++i)
+    {
+        rv = get_element(function_table_list, i);
+        if (strcmp(rv->name, name) == 0)
+            return rv;
+    }
+
+    fprintf(stderr, "I couldn't find function \"%s\"\n", name);
+    return NULL;
+}
+
+void handle_print(struct Vector *expr_list)
+{
+    for (size_t i = 0; i < expr_list->size; ++i)
+    {
+        struct Zap_Expression *expr = get_element(expr_list, i);
+        print_zap_value(calculate_zap_expression(expr));
+        printf(" ");
+    }
+    printf("\n");
+}
+
+struct Zap_Signal *run_zap_function_call(struct Zap_Function_Call *func_call)
+{
+    struct Zap_Signal *rv = create_zap_signal(Nothing_Signal, NULL);
+    if (strcmp(func_call->name, "print") == 0)
+    {
+        handle_print(func_call->argument_list);
+        return rv;
+    }
+
+    struct Zap_Init_Declaration *decl = malloc(sizeof(struct Zap_Init_Declaration));
+
+    struct Zap_Function_Declaration *func_decl = get_function_declaration(func_call->name);
 
     return rv;
 }

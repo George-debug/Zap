@@ -70,7 +70,7 @@
 "/" {return DIV;}
 "%" {return MOD;}
 
-\"[^\\\r\n]*\" {
+\"[^\"\\\r\n]*\" {
         yytext[yyleng - 1] = '\0';
         yylval.string_val=strdup(yytext+1);
         return STRING_LITERAL;
