@@ -404,6 +404,17 @@ expression
             create_zap_value(aux, Floating_Point)
         );
     }
+    | function_call
+    {
+
+        $$ = create_zap_expression
+        (
+            Function_Call,
+            NULL,
+            $1
+        );
+
+    }
     | STRING_LITERAL
     {
         char *aux = strdup($1);

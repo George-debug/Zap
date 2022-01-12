@@ -68,6 +68,13 @@ struct Zap_Value *calculate_zap_expression(struct Zap_Expression *expr)
 
         return rv_variable;
     }
+
+    case Function_Call:
+    {
+        struct Zap_Value *sig = run_zap_function_call(expr->carry);
+
+        return sig;
+    }
     default:
     {
         fprintf(stderr, "Somehow your expression can't be evaluated... Expression of type %d, btw!", expr->expr_type);

@@ -11,7 +11,7 @@ bool float_is_zero(float val);
 struct Zap_Signal *run_zap_block_item(struct Zap_Block_Item *b_item);
 struct Zap_Signal *run_zap_block_item_list(struct Vector *b_item);
 struct Zap_signal *run_if_statement();
-struct Zap_Signal *run_zap_function_call(struct Zap_Function_Call *func_call);
+struct Zap_Value *run_zap_function_call(struct Zap_Function_Call *func_call);
 
 void add_variable_to_current_scope(struct Zap_Variable *var);
 void add_function(struct Zap_Function_Declaration *decl);
